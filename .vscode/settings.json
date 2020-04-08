@@ -1,0 +1,7 @@
+{
+    "python.pythonPath": "/home/rosko/miniconda3/envs/ood/bin/python",
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.mypyEnabled": true,
+    "python.linting.enabled": true
+}
