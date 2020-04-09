@@ -7,7 +7,7 @@ from pytorch_pretrained_bert.modeling_gpt2 import (GPT2LMHead,
 from torch.distributions.bernoulli import Bernoulli
 from torch.nn import CrossEntropyLoss
 
-from modeling_base import GPT2ModelFP16
+from .modeling_base import GPT2ModelFP16
 
 
 class GPT2LMHeadModelBackground(GPT2PreTrainedModel):
@@ -31,7 +31,7 @@ class GPT2LMHeadModelBackground(GPT2PreTrainedModel):
         lm_labels=None,
         past=None,
     ):
-        input_size = torch.Size(input_ids)
+        input_size = input_ids.size()
         pertrubation_mask = self.bernoulli_dist.sample(sample_shape=input_size)
         random_ints = torch.randint(low=0, high=self.config.vocab_size, size=input_size)
 

@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 import torch
 from torch.nn import CrossEntropyLoss
 
-from modeling_base import GPT2ModelFP16
+from .modeling_base import GPT2ModelFP16
 from pytorch_pretrained_bert.modeling_gpt2 import (GPT2LMHead,
                                                    GPT2PreTrainedModel)
 

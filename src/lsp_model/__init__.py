@@ -4,6 +4,7 @@ from pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE, ca
 from pytorch_pretrained_bert.modeling_gpt2 import GPT2Config, GPT2Model, GPT2Config
 from pytorch_pretrained_bert.tokenization_gpt2 import GPT2Tokenizer
 
-from .modeling_gpt2 import GPT2LMHeadModel
+from .gpt2 import GPT2LMHeadModel
+from .gpt2_background import GPT2LMHeadModelBackground
+from .gpt2_odin import GPT2LMHeadModelOdin
 from .optim import Adam
-

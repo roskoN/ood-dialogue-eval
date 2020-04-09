@@ -27,7 +27,9 @@ from gpt2_training.eval_utils import eval_model_loss
 from gpt2_training.train_utils import (boolean_string,
                                        get_eval_list_same_length, load_model,
                                        set_lr)
-from lsp_model import Adam, GPT2Config, GPT2LMHeadModel, GPT2Tokenizer
+from lsp_model import (Adam, GPT2Config, GPT2LMHeadModel,
+                       GPT2LMHeadModelBackground, GPT2LMHeadModelOdin,
+                       GPT2Tokenizer)
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
@@ -62,6 +64,14 @@ parser.add_argument("--eval_input_file", type=str)
 parser.add_argument("--continue_from", type=int, default=0)
 
 parser.add_argument(
+    "--model_type",
+    type=str,
+    default="regular",
+    help="Type of GPT2 model to train. It can be one of the following:"
+    + '"regular", "background", or "odin"',
+)
+
+parser.add_argument(
     "--train_batch_size",
     type=int,
     default=4,
@@ -91,7 +101,7 @@ parser.add_argument("--warmup_proportion", type=float, default=0.1)
 parser.add_argument("--warmup_steps", type=int, default=16000)
 
 parser.add_argument("--normalize_data", type=boolean_string, default=True)
-parser.add_argument("--fp16", type=boolean_string, default=True)
+parser.add_argument("--fp16", type=boolean_string, default=False)
 parser.add_argument(
     "--lr_schedule",
     type=str,
@@ -177,7 +187,7 @@ np.random.seed(args.seed)
 torch.random.manual_seed(args.seed)
 # torch.cuda.manual_seed(args.seed)
 # if n_gpu > 0:
-    # torch.cuda.manual_seed_all(args.seed)
+# torch.cuda.manual_seed_all(args.seed)
 
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d%H%M%S")
 output_dir = join(
@@ -234,7 +244,20 @@ eval_dataloader_gen = get_eval_list_same_length(
 #########################################################################
 # Prepare Model and Optimizer
 ##########################################################################
-model = load_model(GPT2LMHeadModel(config), args.init_checkpoint, args, verbose=True)
+if args.model_type == "regular":
+    model = load_model(
+        GPT2LMHeadModel(config), args.init_checkpoint, args, verbose=True
+    )
+elif args.model_type == "background":
+    model = load_model(
+        GPT2LMHeadModelBackground(config), args.init_checkpoint, args, verbose=True
+    )
+elif args.model_type == "odin":
+    model = load_model(
+        GPT2LMHeadModelOdin(config), args.init_checkpoint, args, verbose=True
+    )
+else:
+    raise ValueError(f"Wrong value for model type: {args.model_type}.")
 if args.local_rank != -1:
     # when from scratch make sure initial models are the same
     params = [p.data for p in model.parameters()]

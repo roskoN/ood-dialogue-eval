@@ -2,19 +2,23 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from pytorch_pretrained_bert.modeling_gpt2 import (GPT2LMHead,
                                                    GPT2PreTrainedModel)
-from torch.nn import CrossEntropyLoss
+from torch.nn import CrossEntropyLoss, Parameter
 
-from modeling_base import GPT2ModelFP16
+from .modeling_base import GPT2ModelFP16
 
 
-class GPT2LMHeadModel(GPT2PreTrainedModel):
+class GPT2LMHeadModelOdin(GPT2PreTrainedModel):
     def __init__(self, config):
-        super(GPT2LMHeadModel, self).__init__(config)
+        super(GPT2LMHeadModelOdin, self).__init__(config)
         self.transformer = GPT2ModelFP16(config)
-        self.lm_head = GPT2LMHead(self.transformer.wte.weight, config)
+        self.linear_g_component = GPT2LMHead(self.transformer.wte.weight, config)
+        w_h = torch.empty(config.n_embd)
+        nn.init.uniform_(w_h, a=-0.1, b=0.1)
+        self.weight_h = Parameter(w_h)
         self.apply(self.init_weights)
 
     def set_tied(self):
@@ -34,10 +38,13 @@ class GPT2LMHeadModel(GPT2PreTrainedModel):
             input_ids, position_ids, token_type_ids, past
         )
         # import pdb; pdb.set_trace()
-        g_logits = F.sigmoid(self.linear_g_component(hidden_states))
-        h_cosine_sim = F.cosine_similarity(x1=self.weight_h, x2=hidden_states, dim=1)
+        g_logits = torch.sigmoid(self.linear_g_component(hidden_states))
+        h_cosine_sim = F.cosine_similarity(
+            x1=self.weight_h, x2=hidden_states, dim=-1
+        ).unsqueeze(-1)
 
-        lm_logits = g_logits / h_cosine_sim
+        lm_logits = h_cosine_sim / g_logits
+
         if lm_labels is not None:
             # loss_fct = CrossEntropyLoss(ignore_index=-1)
             # loss = loss_fct(lm_logits.view(-1, lm_logits.size(-1)), lm_labels.view(-1))
@@ -67,10 +74,13 @@ class GPT2LMHeadModel(GPT2PreTrainedModel):
             input_ids, position_ids, token_type_ids, past
         )
         # import pdb; pdb.set_trace()
-        g_logits = F.sigmoid(self.linear_g_component(hidden_states))
-        h_cosine_sim = F.cosine_similarity(x1=self.weight_h, x2=hidden_states, dim=1)
+        g_logits = torch.sigmoid(self.linear_g_component(hidden_states))
+        h_cosine_sim = F.cosine_similarity(
+            x1=self.weight_h, x2=hidden_states, dim=-1
+        ).unsqueeze(-1)
 
-        lm_logits = g_logits / h_cosine_sim
+        lm_logits = h_cosine_sim / g_logits
+
         if lm_labels is not None:
             # loss_fct = CrossEntropyLoss(ignore_index=-1)
             # loss = loss_fct(lm_logits.view(-1, lm_logits.size(-1)), lm_labels.view(-1))
