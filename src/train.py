@@ -29,7 +29,7 @@ from gpt2_training.train_utils import (boolean_string,
                                        set_lr)
 from lsp_model import (Adam, GPT2Config, GPT2LMHeadModel,
                        GPT2LMHeadModelBackground, GPT2LMHeadModelOdin,
-                       GPT2Tokenizer)
+                       GPT2LMHeadModelOdinFix, GPT2Tokenizer)
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
@@ -68,7 +68,7 @@ parser.add_argument(
     type=str,
     default="regular",
     help="Type of GPT2 model to train. It can be one of the following:"
-    + '"regular", "background", or "odin"',
+    + '"regular", "background", or "odin", "odin_fix"',
 )
 
 parser.add_argument(
@@ -255,6 +255,10 @@ elif args.model_type == "background":
 elif args.model_type == "odin":
     model = load_model(
         GPT2LMHeadModelOdin(config), args.init_checkpoint, args, verbose=True
+    )
+elif args.model_type == "odin_fix":
+    model = load_model(
+        GPT2LMHeadModelOdinFix(config), args.init_checkpoint, args, verbose=True
     )
 else:
     raise ValueError(f"Wrong value for model type: {args.model_type}.")
