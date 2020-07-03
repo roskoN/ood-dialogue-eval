@@ -31,19 +31,20 @@ class GPT2LMHeadModelBackground(GPT2PreTrainedModel):
         lm_labels=None,
         past=None,
     ):
-        input_size = input_ids.size()
-        pertrubation_mask = self.bernoulli_dist.sample(sample_shape=input_size)
-        random_ints = torch.randint(low=0, high=self.config.vocab_size, size=input_size)
+        if self.training:
+            input_size = input_ids.size()
+            pertrubation_mask = self.bernoulli_dist.sample(sample_shape=input_size)
+            random_ints = torch.randint(low=0, high=self.config.vocab_size, size=input_size)
 
-        for batch_dim in range(input_size[0]):
-            for sample_dim in range(input_size[1]):
-                if pertrubation_mask[batch_dim, sample_dim] == 0:
-                    continue
+            for batch_dim in range(input_size[0]):
+                for sample_dim in range(input_size[1]):
+                    if pertrubation_mask[batch_dim, sample_dim] == 0:
+                        continue
 
-                # Very small chance, 1 / self.config.vocab_size,
-                # that the pertrubed input gets the same id,
-                # i.e. it does not change
-                input_ids[batch_dim, sample_dim] = random_ints[batch_dim, sample_dim]
+                    # Very small chance, 1 / self.config.vocab_size,
+                    # that the pertrubed input gets the same id,
+                    # i.e. it does not change
+                    input_ids[batch_dim, sample_dim] = random_ints[batch_dim, sample_dim]
 
         hidden_states, presents = self.transformer(
             input_ids, position_ids, token_type_ids, past
@@ -64,7 +65,12 @@ class GPT2LMHeadModelBackground(GPT2PreTrainedModel):
                 torch.mean(torch.sum(loss1, dim=1).float() / label_size.float())
             )
             # ppl = torch.mean(torch.exp(torch.sum(loss1, dim=1)/label_size))
-            return loss, ppl
+            outputs = (loss, ppl)
+
+            if not self.training:
+                outputs = outputs + (lm_logits,)
+
+            return outputs
         return lm_logits, presents
 
     def forward_pointwise(

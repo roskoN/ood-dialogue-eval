@@ -12,7 +12,7 @@ from .modeling_base import GPT2ModelFP16
 
 class GPT2LMHeadModelOdinFix(GPT2PreTrainedModel):
     def __init__(self, config):
-        super(GPT2LMHeadModelOdin, self).__init__(config)
+        super(GPT2LMHeadModelOdinFix, self).__init__(config)
         self.transformer = GPT2ModelFP16(config)
         self.linear_g_component = nn.Linear(
             in_features=config.n_embd, out_features=1, bias=True
@@ -69,5 +69,10 @@ class GPT2LMHeadModelOdinFix(GPT2PreTrainedModel):
                 torch.mean(torch.sum(loss1, dim=1).float() / label_size.float())
             )
             # ppl = torch.mean(torch.exp(torch.sum(loss1, dim=1)/label_size))
-            return loss, ppl
+            outputs = (loss, ppl)
+
+            if not self.training:
+                outputs = outputs + (lm_logits,)
+
+            return outputs
         return lm_logits, presents

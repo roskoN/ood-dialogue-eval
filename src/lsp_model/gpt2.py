@@ -48,7 +48,12 @@ class GPT2LMHeadModel(GPT2PreTrainedModel):
                 torch.mean(torch.sum(loss1, dim=1).float() / label_size.float())
             )
             # ppl = torch.mean(torch.exp(torch.sum(loss1, dim=1)/label_size))
-            return loss, ppl
+            outputs = (loss, ppl)
+
+            if not self.training:
+                outputs = outputs + (lm_logits,)
+
+            return outputs
         return lm_logits, presents
 
     def forward_pointwise(
