@@ -4,8 +4,9 @@ from __future__ import (absolute_import, division, print_function,
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from pytorch_pretrained_bert.modeling_gpt2 import GPT2PreTrainedModel
-from torch.nn import CrossEntropyLoss, Parameter, ParameterList
+from pytorch_pretrained_bert.modeling_gpt2 import (GPT2LMHead,
+                                                   GPT2PreTrainedModel)
+from torch.nn import CrossEntropyLoss
 
 from .modeling_base import GPT2ModelFP16
 
@@ -17,15 +18,7 @@ class GPT2LMHeadModelOdinFix(GPT2PreTrainedModel):
         self.linear_g_component = nn.Linear(
             in_features=config.n_embd, out_features=1, bias=True
         )
-
-        weight_h = list()
-        for i in range(config.vocab_size):
-            w_h = torch.empty(config.n_embd)
-            nn.init.uniform_(w_h, a=-0.1, b=0.1)
-            weight_h.append(Parameter(w_h))
-
-        self.weight_h = ParameterList(weight_h)
-        self.apply(self.init_weights)
+        self.linear_h_component = GPT2LMHead(self.transformer.wte.weight, config)
 
     def set_tied(self):
         """ Make sure we are sharing the embeddings
@@ -46,14 +39,8 @@ class GPT2LMHeadModelOdinFix(GPT2PreTrainedModel):
         )
 
         g_logits = torch.sigmoid(self.linear_g_component(hidden_states))
-        h_cosine_sim = torch.stack(
-            [
-                F.cosine_similarity(x1=hidden_states, x2=param.view(1, 1, -1), dim=-1)
-                for param in self.weight_h
-            ],
-            dim=-1,
-        )
-        lm_logits = h_cosine_sim / g_logits
+        h_prod = self.linear_h_component(hidden_states)
+        lm_logits = h_prod / g_logits
 
         if lm_labels is not None:
             # loss_fct = CrossEntropyLoss(ignore_index=-1)
