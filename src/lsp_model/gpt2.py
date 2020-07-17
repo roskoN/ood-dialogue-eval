@@ -2,11 +2,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import torch
+from pytorch_pretrained_bert.modeling_gpt2 import (GPT2LMHead,
+                                                   GPT2PreTrainedModel)
 from torch.nn import CrossEntropyLoss
 
 from .modeling_base import GPT2ModelFP16
-from pytorch_pretrained_bert.modeling_gpt2 import (GPT2LMHead,
-                                                   GPT2PreTrainedModel)
 
 
 class GPT2LMHeadModel(GPT2PreTrainedModel):
@@ -80,6 +80,13 @@ class GPT2LMHeadModel(GPT2PreTrainedModel):
             label_size = torch.sum(lm_labels != -1, dim=1).type(loss1.type())
             loss1 = torch.sum(loss1, dim=1) / label_size
             ppl1 = torch.exp(loss1)
+            outputs = (loss1, ppl1)
 
-            return loss1, ppl1
+            if not self.training:
+                loss1 = loss_fct1(
+                    lm_logits.view(-1, lm_logits.size(-1)), lm_labels.view(-1)
+                )
+                outputs = (loss1, ppl1, lm_logits,)
+
+            return outputs
         return lm_logits, presents

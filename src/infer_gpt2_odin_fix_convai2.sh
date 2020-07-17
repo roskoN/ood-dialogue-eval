@@ -1,0 +1,1 @@
+python -u ./predict_odin_convai.py --output_dir ./output_dir --model_name_or_path gpt2 --eval_input_file ./data/convai/convai2_data.tsv --init_checkpoint output_dir/GPT2_odin_fix.1e-05.2.1gpu.2020-07-08122108/gpt2_odin_fix_1epoch.pkl

@@ -284,6 +284,8 @@ class DynamicBatchingLoader(object):
                     features = convert_examples_to_features_dynamic(
                         examples, self.toker, self.max_seq_length
                     )
+                    if not features:
+                        yield None
                     batch = self._batch_feature(features)
                     yield batch
         except StopIteration:

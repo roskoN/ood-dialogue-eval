@@ -59,7 +59,7 @@ class GPT2LMHeadModelOdinFix(GPT2PreTrainedModel):
             outputs = (loss, ppl)
 
             if not self.training:
-                outputs = outputs + (lm_logits,)
+                outputs = outputs + (h_prod, g_logits)
 
             return outputs
         return lm_logits, presents
