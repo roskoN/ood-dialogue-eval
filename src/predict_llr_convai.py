@@ -230,15 +230,33 @@ model_background = model_background.eval()
 
 
 losses = SqliteDict(
-    join(output_dir, "losses.sqlite"), encode=my_encode, decode=my_decode
+    join(output_dir, "losses.sqlite"),
+    encode=my_encode,
+    decode=my_decode,
+    journal_mode="OFF",
+    autocommit=True,
 )
 lm_argmax = SqliteDict(
-    join(output_dir, "lm_argmax.sqlite"), encode=my_encode, decode=my_decode
+    join(output_dir, "lm_argmax.sqlite"),
+    encode=my_encode,
+    decode=my_decode,
+    journal_mode="OFF",
+    autocommit=True,
 )
 lm_max = SqliteDict(
-    join(output_dir, "lm_max.sqlite"), encode=my_encode, decode=my_decode
+    join(output_dir, "lm_max.sqlite"),
+    encode=my_encode,
+    decode=my_decode,
+    journal_mode="OFF",
+    autocommit=True,
 )
-llr = SqliteDict(join(output_dir, "llr.sqlite"), encode=my_encode, decode=my_decode)
+llr = SqliteDict(
+    join(output_dir, "llr.sqlite"),
+    encode=my_encode,
+    decode=my_decode,
+    journal_mode="OFF",
+    autocommit=True,
+)
 with torch.no_grad():
     for item_idx, batch in enumerate(tqdm(eval_dataloader_loss)):
         try:
@@ -280,16 +298,10 @@ with torch.no_grad():
             llr[item_idx] = (argmax_reg.cpu().sum() - argmax_back.cpu().sum()).numpy()
         except Exception as ex:
             print(ex)
-            losses[item_idx] = None
-            lm_argmax[item_idx] = None
-            lm_max[item_idx] = None
-            llr[item_idx] = None
-        finally:
-            if item_idx % 100 == 0:
-                losses.commit()
-                lm_argmax.commit()
-                lm_max.commit()
-                llr.commit()
+            losses[item_idx] = "None"
+            lm_argmax[item_idx] = "None"
+            lm_max[item_idx] = "None"
+            llr[item_idx] = "None"
 
 losses.commit()
 lm_argmax.commit()

@@ -214,10 +214,26 @@ model = load_model(
 
 model = model.eval()
 losses = SqliteDict(
-    join(output_dir, "losses.sqlite"), encode=my_encode, decode=my_decode
+    join(output_dir, "losses.sqlite"),
+    encode=my_encode,
+    decode=my_decode,
+    journal_mode="OFF",
+    autocommit=True,
 )
-hs = SqliteDict(join(output_dir, "hs.sqlite"), encode=my_encode, decode=my_decode)
-gs = SqliteDict(join(output_dir, "gs.sqlite"), encode=my_encode, decode=my_decode)
+hs = SqliteDict(
+    join(output_dir, "hs.sqlite"),
+    encode=my_encode,
+    decode=my_decode,
+    journal_mode="OFF",
+    autocommit=True,
+)
+gs = SqliteDict(
+    join(output_dir, "gs.sqlite"),
+    encode=my_encode,
+    decode=my_decode,
+    journal_mode="OFF",
+    autocommit=True,
+)
 with torch.no_grad():
     for item_idx, batch in enumerate(tqdm(eval_dataloader_loss)):
         try:
@@ -233,14 +249,9 @@ with torch.no_grad():
             gs[item_idx] = g_logits.detach().cpu().squeeze().numpy()
         except Exception as ex:
             print(ex)
-            losses[item_idx] = None
-            hs[item_idx] = None
-            gs[item_idx] = None
-        finally:
-            if item_idx % 100 == 0:
-                losses.commit()
-                hs.commit()
-                gs.commit()
+            losses[item_idx] = "None"
+            hs[item_idx] = "None"
+            gs[item_idx] = "None"
 
 
 losses.commit()
