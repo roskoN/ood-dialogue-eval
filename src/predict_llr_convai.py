@@ -298,10 +298,10 @@ with torch.no_grad():
             llr[item_idx] = (argmax_reg.cpu().sum() - argmax_back.cpu().sum()).numpy()
         except Exception as ex:
             print(ex)
-            losses[item_idx] = "None"
-            lm_argmax[item_idx] = "None"
-            lm_max[item_idx] = "None"
-            llr[item_idx] = "None"
+            losses[item_idx] = 0
+            lm_argmax[item_idx] = 0
+            lm_max[item_idx] = 0
+            llr[item_idx] = 0
 
 losses.commit()
 lm_argmax.commit()

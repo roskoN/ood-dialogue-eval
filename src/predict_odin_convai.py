@@ -249,9 +249,9 @@ with torch.no_grad():
             gs[item_idx] = g_logits.detach().cpu().squeeze().numpy()
         except Exception as ex:
             print(ex)
-            losses[item_idx] = "None"
-            hs[item_idx] = "None"
-            gs[item_idx] = "None"
+            losses[item_idx] = 0
+            hs[item_idx] = 0
+            gs[item_idx] = 0
 
 
 losses.commit()

@@ -286,8 +286,11 @@ class DynamicBatchingLoader(object):
                     )
                     if not features:
                         yield None
-                    batch = self._batch_feature(features)
-                    yield batch
+                    try:
+                        batch = self._batch_feature(features)
+                        yield batch
+                    except:
+                        yield None
         except StopIteration:
             pass
 
